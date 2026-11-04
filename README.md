@@ -148,3 +148,15 @@ GitHub Actions runs backend tests, frontend tests, and a production frontend bui
 - **Waitlist** entries are stored in the current browser's local storage, not the backend database. "Book next open slot" creates a real appointment through `POST /api/appointments`; the waitlist entry is removed only after that booking succeeds.
 - Manual **Suggest** actions use the SSE endpoint to stream progress and the validated recommendation. The final recommendation remains pending until a staff member confirms they have checked the proposed time with the patient and accepts it; the API rejects acceptance without that confirmation flag.
 - If an automatic workflow cannot find an eligible slot, the appointment remains visible in the recovery queue as **No replacement yet** so staff can create a new future slot for an available provider and retry rather than losing the exception in the UI.
+
+- LLM testing results snapshots
+
+
+- <img width="960" height="540" alt="image" src="https://github.com/user-attachments/assets/5f54ffbd-31c4-47e7-a681-0632e2cbba86" />
+
+
+<img width="960" height="540" alt="Screenshot 2026-11-04 141503" src="https://github.com/user-attachments/assets/fd89231f-19bd-4a59-a4fb-92d316262ae9" />
+
+
+
+<img width="960" height="540" alt="image" src="https://github.com/user-attachments/assets/4183890e-3d52-4449-9c14-aef74c4d1894" />
