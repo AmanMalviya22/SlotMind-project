@@ -58,12 +58,13 @@ public class AISchedulingStrategy implements SchedulingStrategy {
                             .filter(candidate -> !candidate.slot().getId()
                                     .equals(primary.slot().getId()))
                             .forEach(ordered::add);
+                    log.info("Scheduling recommendation selected | trigger={} | source=AI | candidateCount={} | alternatives={}",
+                            reason, candidates.size(), ordered.size() - 1);
                     return List.copyOf(ordered);
                 }
 
                 log.warn(
-                        "LLM returned an invalid scheduling recommendation for {} with {} candidates; "
-                                + "using rule-based fallback",
+                        "LLM recommendation rejected by validation | trigger={} | candidateCount={} | fallback=RULE_BASED",
                         reason,
                         candidates.size());
             }
@@ -73,7 +74,10 @@ public class AISchedulingStrategy implements SchedulingStrategy {
                     exception.getClass().getSimpleName());
         }
 
-        return fallback.recommend(appointment, reason, candidates);
+        List<Recommendation> fallbackRecommendations = fallback.recommend(appointment, reason, candidates);
+        log.info("Scheduling recommendation selected | trigger={} | source=RULE_BASED | candidateCount={} | recommendations={}",
+                reason, candidates.size(), fallbackRecommendations.size());
+        return fallbackRecommendations;
     }
 
     private Optional<Recommendation> validate(
