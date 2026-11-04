@@ -108,10 +108,18 @@ public class LiteLLMGateway implements LLMGateway {
             Appointment appointment,
             TriggerReason reason,
             List<Slot> candidates) {
-        if (apiKey.isBlank() || candidates.isEmpty()) {
+        if (apiKey.isBlank()) {
+            log.warn("AI gateway is not configured (SLOTMIND_LLM_API_KEY missing); fallback will be used");
+            return Optional.empty();
+        }
+        if (candidates.isEmpty()) {
+            log.info("AI request not sent: no eligible candidates for trigger={}", reason);
             return Optional.empty();
         }
 
+        long startedAt = System.nanoTime();
+        log.info("AI gateway request started | trigger={} | model={} | candidateCount={}",
+                reason, model, candidates.size());
         try {
             ChatRequest request = new ChatRequest(model, List.of(
                     new Message("system", SYSTEM_PROMPT),
@@ -130,11 +138,17 @@ public class LiteLLMGateway implements LLMGateway {
                     .body(request);
 
             JsonNode response = call.retrieve().body(JsonNode.class);
-            return parse(response);
+            long durationMs = (System.nanoTime() - startedAt) / 1_000_000;
+            log.info("AI gateway response received | trigger={} | durationMs={} | responsePresent={}",
+                    reason, durationMs, response != null);
+            Optional<Recommendation> recommendation = parse(response);
+            log.info("AI response parsing | trigger={} | validRecommendation={}",
+                    reason, recommendation.isPresent());
+            return recommendation;
         } catch (Exception exception) {
-            log.warn(
-                    "LLM scheduling request failed; using rule-based fallback: {}",
-                    exception.getClass().getSimpleName());
+            long durationMs = (System.nanoTime() - startedAt) / 1_000_000;
+            log.warn("AI gateway request failed | trigger={} | durationMs={} | errorType={} | fallback=RULE_BASED",
+                    reason, durationMs, exception.getClass().getSimpleName());
             return Optional.empty();
         }
     }
