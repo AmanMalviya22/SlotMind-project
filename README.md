@@ -160,3 +160,6 @@ GitHub Actions runs backend tests, frontend tests, and a production frontend bui
 
 
 <img width="960" height="540" alt="image" src="https://github.com/user-attachments/assets/4183890e-3d52-4449-9c14-aef74c4d1894" />
+
+
+<img width="467" height="343" alt="image" src="https://github.com/user-attachments/assets/3dd5eef9-3209-45b6-87af-400a4f130a7f" />
