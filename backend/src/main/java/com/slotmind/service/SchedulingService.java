@@ -17,7 +17,7 @@ import com.slotmind.strategy.SchedulingStrategy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.LockModeType;
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class SchedulingService {
+public class SchedulingService {\n    private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
     private final SlotRepository slots;
     private final SuggestionRepository suggestions;
     private final SchedulingStrategy strategy;
@@ -117,6 +117,8 @@ public class SchedulingService {
                     0);
 
             RescheduleSuggestion savedSuggestion = suggestions.save(suggestion);
+            log.info("Scheduling suggestion persisted | trigger={} | source={} | suggestionId={} | candidateCount={}",
+                    reason, savedSuggestion.getSource(), savedSuggestion.getId(), candidates.size());
             if (lockedAppointment.getStatus() == AppointmentStatus.CONFIRMED) {
                 lockedAppointment.setStatus(AppointmentStatus.RESCHEDULE_PENDING);
                 appointments.save(lockedAppointment);
