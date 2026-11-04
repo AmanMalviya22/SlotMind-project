@@ -122,7 +122,7 @@ public class LiteLLMGateway implements LLMGateway {
                 reason, model, candidates.size());
         try {
             ChatRequest request = new ChatRequest(model, List.of(
-                    new Message("system", SYSTEM_PROMPT),
+                    new Message("system", systemPrompt(reason)),
                     new Message("user", prompt(appointment, reason, candidates))));
 
             RestClient.RequestHeadersSpec<?> call = client.post()
@@ -151,6 +151,36 @@ public class LiteLLMGateway implements LLMGateway {
                     reason, durationMs, exception.getClass().getSimpleName());
             return Optional.empty();
         }
+    }
+
+    private static String systemPrompt(TriggerReason reason) {
+        String triggerInstructions = switch (reason) {
+            case PROVIDER_OFFLINE -> """
+                    TRIGGER PRIORITY — PROVIDER_OFFLINE:
+                    - The original provider is unavailable. Never choose that provider.
+                    - First prefer an eligible provider with the original provider's specialty.
+                    - Within that specialty group, prefer matching appointment duration, then earliest start.
+                    - If no provider with the same specialty is eligible, choose the earliest eligible candidate.
+                    - Explain the operational replacement briefly; do not claim clinical equivalence.
+                    """;
+            case SLOT_CANCELLED -> """
+                    TRIGGER PRIORITY — SLOT_CANCELLED:
+                    - The patient's existing slot was cancelled. Minimize disruption.
+                    - Prefer the original provider if an eligible slot exists.
+                    - Otherwise prefer a provider with the original provider's specialty.
+                    - Within the preferred group, prefer matching appointment duration, then earliest start.
+                    - Explain that this is a rescheduling option, without claiming the patient has accepted it.
+                    """;
+            case INITIAL -> """
+                    TRIGGER PRIORITY — INITIAL:
+                    - This is a new appointment request, not a recovery from cancellation.
+                    - Prefer the original provider if an eligible slot exists.
+                    - Otherwise prefer a provider with the original provider's specialty.
+                    - Within the preferred group, prefer matching appointment duration, then earliest start.
+                    - Explain why the candidate fits the scheduling context; do not imply a booking is confirmed.
+                    """;
+        };
+        return SYSTEM_PROMPT + "\\n\\n" + triggerInstructions;
     }
 
     static String prompt(
